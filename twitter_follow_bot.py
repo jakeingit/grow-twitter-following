@@ -23,8 +23,12 @@ storage.
 
 from twitter import Twitter, OAuth, TwitterHTTPError
 import os
-import time
+import time, threading, datetime
 import random
+random_secondwait = random.randint(60 * 60 * 11, 60 * 60 * 13)
+next_call_mutual = time.time() + random.randint(60 * 60 * 3, 60 * 60 * 5)
+next_call_fav = time.time() + random_secondwait
+next_call_auto = time.time() + random_secondwait
 from random import randint
 from twitter_info import *
 
@@ -34,6 +38,12 @@ from twitter_info import *
 #Good to mimic the 3 twitter followers that you get on the side
 #Every 3rd have a PAUSE... hmmm
 
+def newSleep():
+	sleeptime = random.randint(15,  21)
+	print("Sleeping for "+str(sleeptime)+" minutes before the thread continues.");
+	time.sleep(60* sleeptime)
+	print("woke up");
+	
 def setGlobals():
 	global thirdcount
 	thirdcount = 0
@@ -41,7 +51,6 @@ def setGlobals():
 	sessionfollows = 0
 	global sessionunfollows
 	sessionunfollows = 0
-	
 
 
 ALREADY_FOLLOWED_FILE = "already-followed.csv"
@@ -60,11 +69,12 @@ def auto_fav(q, count=100, result_type="recent"):
 	"""
 		Favorites tweets that match a certain phrase (hashtag, word, etc.)
 	"""
-
+	newSleep();
 	result = search_tweets(q, count, result_type)
 
+
+
 	for tweet in result["statuses"]:
-		
 		try:
 			# don't favorite your own tweets
 			if tweet["user"]["screen_name"] == TWITTER_HANDLE:
@@ -76,8 +86,33 @@ def auto_fav(q, count=100, result_type="recent"):
 		# when you have already favorited a tweet, this error is thrown
 		except TwitterHTTPError as e:
 			print("error: %s" % (str(e)))
+	#fav = threading.Thread(target=auto_fav, args=(next_call_fav,)).start()
+	
 
-
+def randintWithHalfRandomness():
+	if randint(0,1) == 1:
+		return randint(3,9)
+	else:
+		return 0;
+	
+def auto_follow_others_thread():
+	newSleep();
+	auto_fav("socialmediamarketing", count=randint(0,1))
+	auto_follow("socialmediamarketing", count=randintWithHalfRandomness())
+	auto_fav("softwaredevelopment", count=randint(0,1))
+	auto_follow("softwaredevelopment", count=randintWithHalfRandomness())
+	auto_fav("startup", count=randint(0,1))
+	auto_follow("startup", count=randintWithHalfRandomness())
+	Thread.sleep(randint(60*15,60*19))
+	auto_fav("smm", count=randint(0,1))
+	auto_follow("smm", count=randintWithHalfRandomness())
+	auto_fav("homebrew", count=randint(0,1))
+	auto_follow("homebrew", count=randintWithHalfRandomness())
+	auto_fav("nomad", count=randint(0,1))
+	auto_follow("nomad", count=randintWithHalfRandomness())
+	Thread.sleep(randint(60*15,60*19))
+	#t = threading.Thread(target=auto_follow_others_thread, args=(next_call_mutual,)).start()
+	#t.join()		
 def auto_rt(q, count=100, result_type="recent"):
 	"""
 		Retweets tweets that match a certain phrase (hashtag, word, etc.)
@@ -130,7 +165,6 @@ def auto_follow(q, count=100, result_type="recent"):
 		Sleeps in intervals of THREES to play against twitter
 	"""
 
-	#Fucking sucks. Globals cansuck my left nut
 	global sessionfollows
 	sessionfollows = 0
 	global thirdcount
@@ -161,7 +195,7 @@ def auto_follow(q, count=100, result_type="recent"):
 				t.friendships.create(user_id=tweet["user"]["id"], follow=False)
 				following.update(set([tweet["user"]["id"]]))
 
-				print("followed %s on %s %d / %d left" % (tweet["user"]["screen_name"], q, sessionfollows, followlimit))
+				print("followed %s on %s (%d out of %d for this session)" % (tweet["user"]["screen_name"], q, sessionfollows, followlimit))
 
 		except TwitterHTTPError as e:
 			print("error: %s" % (str(e)))
@@ -175,6 +209,7 @@ def auto_follow_followers_for_user(user_screen_name, count=100):
 	"""
 		Follows the followers of a user
 	"""
+	newSleep();
 	global sum
 	sum = 0
 	global sessionfollows
@@ -194,15 +229,18 @@ def auto_follow_followers_for_user(user_screen_name, count=100):
 				user_id not in do_not_follow):
 				time.sleep(random.random() * 16 + 6)
 				t.friendships.create(user_id=user_id, follow=False)
-				print("mutually followed %s %d/%d left" % (user_id, sum, len(followers_for_user)))
+				print("mutually followed %s (%d out of %d for this session)" % (user_id, sum, len(followers_for_user)))
 
 		except TwitterHTTPError as e:
 			print("error: %s" % (str(e)))
+	#follow = threading.Thread(target=auto_follow_followers_for_user, args=(next_call_mutual,)).start()
+	#follow.join()
 
 def auto_follow_followers():
 	"""
 		Follows back everyone who's followed you
 	"""
+	newSleep();
 
 	following = set(t.friends.ids(screen_name=TWITTER_HANDLE)["ids"])
 	followers = set(t.followers.ids(screen_name=TWITTER_HANDLE)["ids"])
@@ -217,6 +255,8 @@ def auto_follow_followers():
 			sessionfollows = sessionfollows + 1
 		except Exception as e:
 			print("error: %s" % (str(e)))
+	#o = threading.Thread(target=auto_follow_others_thread, args=(next_call_mutual,)).start()
+	#o.join()
 
 
 def auto_unfollow_nonfollowers():
@@ -227,6 +267,7 @@ def auto_unfollow_nonfollowers():
 		to mimic REAL useage as not to be banned...
 		Doesnt have a limit... probally breaks at any time.
 	"""
+	newSleep();
 	global sessionunfollows
 	sessionunfollows = 0
 	unfollowlimit = random.random() * 25 + 125
@@ -265,8 +306,7 @@ def auto_unfollow_nonfollowers():
 			time.sleep(random.random() * 4 + 10)
 			t.friendships.destroy(user_id=user_id)
 			sessionunfollows = sessionunfollows + 1
-			print("unfollowed %d %d/%d left" % (user_id, sessionunfollows, unfollowlimit))
-
+			print("unfollowed %d (%d out of %d for the session) " % (user_id, sessionunfollows, unfollowlimit))
 
 def auto_mute_following():
 	"""

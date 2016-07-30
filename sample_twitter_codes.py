@@ -24,10 +24,15 @@ Makes much more sense to have this FIRST since you'd add people and then unfollo
 lol
 '''
 from random import randint
-import random
+import random, time, threading
 print("===========================================")
 print("Running the Script, c Jake GK 2016")
 print("")
+
+random_secondwait = random.randint(60 * 60 * 36, 60 * 60 * 48)
+next_call_mutual = time.time() + random.randint(60 * 60 * 3, 60 * 60 * 5)
+next_call_fav = time.time() + random_secondwait
+next_call_auto = time.time() + random_secondwait
 
 def randintWithHalfRandomness():
 	if randint(0,1) == 1:
@@ -42,6 +47,8 @@ print("Now Unfollowing people who dont follow you with ~N(25,12) total")
 print("===========================================")
 #auto_unfollow_nonfollowers()
 
+
+
 '''
 #2 In this code, change "jakegosskuehn" to the twitter handle whose followers you want to follow, 
 and set the count to how many people should be followed. Default is 100.
@@ -52,40 +59,28 @@ print("===========================================")
 print("Now Following people who follow you! ~N(25,12) total")
 print("===========================================")
 from twitter_follow_bot import auto_follow_followers_for_user
-auto_follow_followers_for_user("jakegosskuehn", count=100)
-
-
-
+#auto_follow_followers_for_user("jakegosskuehn", count=100)
 
 '''
 #3 Here you can automatically follow people who tweet about a certain phrase. Just replace the phrase
 with something relevant to you! Also you can set the count to whatever makes you most comfortable.
 '''
 
-
-
 print("===========================================")
 print("Now following those who like your hashtags! ~B(.5)*U(3,9)")
 print("===========================================")
 from twitter_follow_bot import auto_follow
 from twitter_follow_bot import auto_fav
-auto_fav("socialmediamarketing", count=randint(0,1))
-auto_follow("socialmediamarketing", count=randintWithHalfRandomness())
-auto_fav("softwaredevelopment", count=randint(0,1))
-auto_follow("softwaredevelopment", count=randintWithHalfRandomness())
-auto_fav("startup", count=randint(0,1))
-auto_follow("startup", count=randintWithHalfRandomness())
-auto_fav("smm", count=randint(0,1))
-auto_follow("smm", count=randintWithHalfRandomness())
-auto_fav("homebrew", count=randint(0,1))
-auto_follow("homebrew", count=randintWithHalfRandomness())
-auto_fav("nomad", count=randint(0,1))
-auto_follow("nomad", count=randintWithHalfRandomness())
+from twitter_follow_bot import auto_follow_others_thread
+
+#auto_follow_others_thread()
+
 
 
 '''
 #4 This code will let you favoite things that are relevant to you. Just replace "phrase" with the phrase
 you want to favorite for, and set the count to how many things you want to favorite.
+This code is already part of: auto_follow_others_thread()... makes sense to fav and follow at the same time ;P
 '''
 #from twitter_follow_bot import auto_fav
 #auto_fav("socialmediamarketing", count=1)
@@ -99,6 +94,37 @@ you want to favorite for, and set the count to how many things you want to favor
 #auto_fav("cherrybit", count=1)
 
 
-print("===========================================")
-print("PYTHON BOT IS DONE. I WILL SLEEP UNTIL CALLED.")
-print("===========================================")
+'''
+Finish: I put all threads in one method, and join everything together. That method will be called again to loop it all again.
+
+'''
+from twitter_follow_bot import newSleep
+#def recallAllThreads():
+global toggle
+toggle = false
+while(True):
+	unfollowThread1 = threading.Thread(target=auto_unfollow_nonfollowers)
+	followMutualFollowersThread2 = threading.Thread(target=auto_follow_followers_for_user, args=('jakegosskuehn', 100,))
+	followAndLikeOthersThread3 = threading.Thread(target=auto_follow_others_thread)
+	if(toggle)
+	{
+	unfollowThread1.start()
+	}
+	followMutualFollowersThread2.start()
+	followAndLikeOthersThread3.start()
+	#restartThreading4.start()
+	if(toggle)
+	{
+	unfollowThread1.join()
+	}
+	followMutualFollowersThread2.join()
+	followAndLikeOthersThread3.join()
+	#restartThreading4.join()
+	
+	print("===========================================")
+	print("PYTHON BOT IS LOOPING AGAIN. Sleeping for 24 hours.")
+	print("===========================================")
+	time.sleep(randint(60*60*24,60*60*25))
+	toggle = true;
+#restartThreading4 = threading.Thread(target=recallAllThreads)
+
