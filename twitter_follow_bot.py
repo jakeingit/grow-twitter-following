@@ -94,13 +94,15 @@ def randintWithHalfRandomness():
 		return randint(3,9)
 	else:
 		return 0;
-	
+
 def auto_follow_others_thread():
 	newSleep();
 	auto_fav("socialmediamarketing", count=randint(0,1))
 	auto_follow("socialmediamarketing", count=randintWithHalfRandomness())
 	auto_fav("softwaredevelopment", count=randint(0,1))
 	auto_follow("softwaredevelopment", count=randintWithHalfRandomness())
+	auto_fav("programming", count=randint(0,1))
+	auto_follow("programming", count=randintWithHalfRandomness())
 	auto_fav("startup", count=randint(0,1))
 	auto_follow("startup", count=randintWithHalfRandomness())
 	Thread.sleep(randint(60*15,60*19))
